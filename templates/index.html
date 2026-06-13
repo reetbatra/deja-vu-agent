@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>deja-vu-agent</title>
+  <style>
+    :root { --bg: #0b0f14; --panel: #131922; --ink: #e6e6e6; --muted: #8a9bb0; --accent: #50c8ff; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, sans-serif; }
+    header { padding: 24px 32px; border-bottom: 1px solid #1e2630; }
+    header h1 { margin: 0; font-size: 18px; letter-spacing: 0.2px; }
+    header p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+    .wrap { display: grid; grid-template-columns: 320px 1fr; gap: 20px; padding: 20px 24px; height: calc(100vh - 85px); }
+    aside { background: var(--panel); border: 1px solid #1e2630; border-radius: 14px; padding: 14px; overflow: auto; }
+    aside h2 { font-size: 12px; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; letter-spacing: 1px; }
+    .item { background: #0f1318; border: 1px solid #1e2630; border-radius: 10px; padding: 10px 12px; margin: 0 0 10px; }
+    .item .name { font-weight: 600; font-size: 13px; }
+    .item .line { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    main { background: var(--panel); border: 1px solid #1e2630; border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; }
+    .messages { flex: 1; overflow: auto; padding: 18px; }
+    .bubble { max-width: 72%; padding: 10px 12px; border-radius: 14px; margin: 8px 0; font-size: 14px; line-height: 1.45; word-wrap: break-word; white-space: pre-wrap; }
+    .user { margin-left: auto; background: #1f3a52; }
+    .bot { margin-right: auto; background: #22303f; }
+    .foot { border-top: 1px solid #1e2630; padding: 12px; display: flex; gap: 10px; }
+    .foot input { flex: 1; background: #0f1318; border: 1px solid #1e2630; color: var(--ink); padding: 12px 14px; border-radius: 10px; outline: none; }
+    .foot input:focus { border-color: var(--accent); }
+    .foot button { background: var(--accent); color: #001018; border: 0; padding: 0 14px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+    .muted { color: var(--muted); font-size: 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Deja Vu Agent</h1>
+    <p>Support agent that learns from answered questions.</p>
+  </header>
+  <div class="wrap">
+    <aside>
+      <h2>Knowledge Base</h2>
+      {% for name, body in docs.items() %}
+      <div class="item">
+        <div class="name">{{ name }}</div>
+        <div class="line">{{ body[:90] }}{% if body|length > 90 %}…{% endif %}</div>
+      </div>
+      {% endfor %}
+      <h2 style="margin-top:14px">Saved Skills</h2>
+      {% for name, body in skills.items() %}
+      <div class="item">
+        <div class="name">{{ name }}</div>
+        <div class="line">{{ body[:90] }}{% if body|length > 90 %}…{% endif %}</div>
+      </div>
+      {% endfor %}
+    </aside>
+    <main>
+      <div class="messages" id="messages">
+        <div class="bubble bot">Ask a technical question about the project. I’ll answer from existing skills, or create a new one.</div>
+      </div>
+      <form class="foot" id="chat" autocomplete="off">
+        <input id="m" name="message" placeholder="Type a question..." />
+        <button type="submit">Send</button>
+      </form>
+    </main>
+  </div>
+  <script>
+    const form = document.getElementById('chat');
+    const box = document.getElementById('messages');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = document.getElementById('m').value.trim();
+      if (!text) return;
+      append('user', text);
+      document.getElementById('m').value = '';
+      const res = await fetch('/api/chat', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({message: text}) });
+      const data = await res.json();
+      append('bot', data.reply);
+    });
+    function append(role, text) {
+      const el = document.createElement('div');
+      el.className = 'bubble ' + role;
+      el.textContent = text;
+      box.appendChild(el);
+      box.scrollTop = box.scrollHeight;
+    }
+  </script>
+</body>
+</html>

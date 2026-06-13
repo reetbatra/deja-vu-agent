@@ -1,3 +1,5 @@
 # Deja Vu Agent
 
-A Telegram support agent that gets smarter as it answers questions, learning from answered queries by saving reusable skills.
+# Deja Vu Agent
+
+A support agent that gets smarter as it answers questions. This repo contains a FastAPI demo with a Telegram skill flow and reusable skills.
